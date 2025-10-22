@@ -1,31 +1,30 @@
 import marimo
 
-__generated_with = "0.9.0"
+__generated_with = "0.16.0"
 app = marimo.App(width="medium")
 
 
 @app.cell
 def __():
     import marimo as mo
+    import altair as alt
+    import polars as pl
 
-    return (mo,)
+    return mo, alt, pl
 
 
 @app.cell
 def __(mo):
-    mo.md(
-        r"""
-        # Climate Change Adaptation Dashboard
-        
-        Exploring temperature trends and adaptation measures across Europe
-        """
-    )
+    mo.md("""
+    # Climate Change Adaptation Dashboard
+
+    Exploring temperature trends and adaptation measures across Europe
+    """)
     return
 
 
 @app.cell
 def __(mo):
-    # Select a country
     country = mo.ui.dropdown(
         options=["Germany", "France", "Spain", "Italy", "Poland"],
         value="Germany",
@@ -36,9 +35,7 @@ def __(mo):
 
 
 @app.cell
-def __(country, mo):
-    import polars as pl
-
+def __(country, mo, pl):
     # Sample climate data
     data = pl.DataFrame(
         {
@@ -50,7 +47,7 @@ def __(country, mo):
     )
 
     mo.md(f"## Climate Data for {country.value}")
-    return data, pl
+    return data
 
 
 @app.cell
@@ -60,46 +57,36 @@ def __(data, mo):
 
 
 @app.cell
-def __(data, mo):
+def __(data, mo, alt):
     # Temperature trend chart
-    temp_chart = mo.ui.altair_chart(
-        data.to_pandas(),
-        spec={
-            "mark": {"type": "line", "point": True, "color": "#e74c3c"},
-            "encoding": {
-                "x": {"field": "year", "type": "ordinal", "title": "Year"},
-                "y": {
-                    "field": "avg_temp_c",
-                    "type": "quantitative",
-                    "title": "Avg Temperature (°C)",
-                },
-            },
-            "title": "Average Temperature Trend",
-        },
+    temp_chart = (
+        alt.Chart(data.to_pandas())
+        .mark_line(point=True, color="#e74c3c")
+        .encode(
+            x=alt.X("year:O", title="Year"),
+            y=alt.Y("avg_temp_c:Q", title="Avg Temperature (°C)"),
+        )
+        .properties(title="Average Temperature Trend")
     )
-    temp_chart
+
+    mo.ui.altair_chart(temp_chart)
     return (temp_chart,)
 
 
 @app.cell
-def __(data, mo):
+def __(data, mo, alt):
     # Adaptation budget chart
-    budget_chart = mo.ui.altair_chart(
-        data.to_pandas(),
-        spec={
-            "mark": {"type": "bar", "color": "#27ae60"},
-            "encoding": {
-                "x": {"field": "year", "type": "ordinal", "title": "Year"},
-                "y": {
-                    "field": "adaptation_budget_million",
-                    "type": "quantitative",
-                    "title": "Budget (€ Million)",
-                },
-            },
-            "title": "Climate Adaptation Budget",
-        },
+    budget_chart = (
+        alt.Chart(data.to_pandas())
+        .mark_bar(color="#27ae60")
+        .encode(
+            x=alt.X("year:O", title="Year"),
+            y=alt.Y("adaptation_budget_million:Q", title="Budget (€ Million)"),
+        )
+        .properties(title="Climate Adaptation Budget")
     )
-    budget_chart
+
+    mo.ui.altair_chart(budget_chart)
     return (budget_chart,)
 
 
@@ -111,10 +98,10 @@ def __(data, mo):
 
     mo.md(f"""
     ### Key Insights
-    
-    - **Temperature increase (2015-2024):** +{avg_temp_increase}°C
-    - **Heatwave days in 2024:** {latest['heatwave_days']} days
-    - **Current adaptation budget:** €{latest['adaptation_budget_million']}M
+
+    - **Temperature increase (2015–2024):** +{avg_temp_increase} °C  
+    - **Heatwave days in 2024:** {latest['heatwave_days']} days  
+    - **Current adaptation budget:** €{latest['adaptation_budget_million']} M
     """)
     return avg_temp_increase, latest
 
