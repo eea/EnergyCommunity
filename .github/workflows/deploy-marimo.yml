@@ -2,7 +2,7 @@ name: Deploy Marimo to GitHub Pages
 
 on:
   push:
-    branches: ["main"]  # Change to your default branch if different
+    branches: ["marimo-test"]  # Change to your default branch if different
   workflow_dispatch:
 
 permissions:
